@@ -36,7 +36,9 @@ authAPI.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("access_token");
-      window.location.href = "/login";
+      localStorage.removeItem("user");
+      // Tidak redirect ke /login karena menggunakan modal popup
+      // Frontend akan handle dengan menampilkan auth modal
     }
     return Promise.reject(error);
   }
@@ -48,7 +50,9 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("access_token");
-      window.location.href = "/login";
+      localStorage.removeItem("user");
+      // Tidak redirect ke /login karena menggunakan modal popup
+      // Frontend akan handle dengan menampilkan auth modal
     }
     return Promise.reject(error);
   }
