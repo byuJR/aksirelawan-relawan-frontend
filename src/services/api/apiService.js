@@ -23,7 +23,13 @@ export const AuthService = {
 };
 
 // Services lainnya - pakai api (Rust backend)
-export const ActivityService = createCrudService("/activities");
+export const ActivityService = {
+  getAll: (params) => api.get("/activities/public", { params }), // Public endpoint untuk relawan
+  getById: (id) => api.get(`/activities/${id}`),
+  create: (data) => api.post("/activities", data),
+  update: (id, data) => api.put(`/activities/${id}`, data),
+  delete: (id) => api.delete(`/activities/${id}`),
+};
 export const OrganizationService = createCrudService("/organizations");
 export const SkillService = createCrudService("/skills");
 export const CategoryService = createCrudService("/categories");
