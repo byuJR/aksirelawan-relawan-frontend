@@ -2,13 +2,24 @@
 import { ref, onMounted, computed } from "vue";
 import { useProfile } from "../composables/useProfile.js";
 import { useActivities } from "../composables/useActivities.js";
+import { supabase } from "../config/supabase.js";
 
 const { profile, fetchProfile, profileLoaded, meta: profileMeta } = useProfile();
 const { activities, loading: activitiesLoading, fetchActivities, displayedActivities, meta: activitiesMeta } = useActivities();
 
-const user = ref(JSON.parse(localStorage.getItem("user")) || null);
+const user = ref(null);
+
+// Get fresh user from Supabase
+const getCurrentUser = async () => {
+  const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+  if (supabaseUser) {
+    user.value = supabaseUser;
+    localStorage.setItem("user", JSON.stringify(supabaseUser));
+  }
+};
 
 const load = async () => {
+  await getCurrentUser();
   await fetchProfile();
   await fetchActivities();
 };

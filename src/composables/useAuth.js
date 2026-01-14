@@ -1,6 +1,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { AuthService } from "../services/api/apiService.js";
+import { supabase } from "../config/supabase.js";
 
 export function useAuth() {
   const loading = ref(false);
@@ -12,28 +13,27 @@ export function useAuth() {
     error.value = null;
 
     try {
-      const res = await AuthService.login(email, password);
-      // login may return flat access_token or wrapped under data
-      const token = res.data?.access_token || res.data?.data?.access_token;
-      const user = res.data?.user || res.data?.data?.user || res.data?.data;
+      // Clear localStorage sebelum login baru
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      localStorage.removeItem("access_token");
+      
+      const { session, user } = await AuthService.login(email, password);
 
-      if (!token) {
-        error.value = "Token tidak ditemukan dalam response";
+      if (!session) {
+        error.value = "Login gagal, session tidak ditemukan";
         return;
       }
 
-      localStorage.setItem("access_token", token);
+      // Simpan user info baru ke localStorage
       localStorage.setItem("user", JSON.stringify(user));
 
       if (onSuccess) onSuccess(user);
 
-      router.push("/dashboard");
+      router.push("/");
     } catch (err) {
       console.error("Login error:", err);
-      const errs = err.response?.data?.errors;
-      error.value = Array.isArray(errs)
-        ? errs.join(", ")
-        : err.response?.data?.message || "Login gagal";
+      error.value = err.message || "Login gagal";
     } finally {
       loading.value = false;
     }
@@ -52,29 +52,65 @@ export function useAuth() {
     }
 
     try {
-      // Register User
-      await AuthService.register(email, password, name);
+      // Register dengan Supabase
+      const { user } = await AuthService.register(email, password, name);
 
-      // Auto Login
-      const loginRes = await AuthService.login(email, password);
-      const token =
-        loginRes.data?.access_token || loginRes.data?.data?.access_token;
-      const user =
-        loginRes.data?.user || loginRes.data?.data?.user || loginRes.data?.data;
-
-      localStorage.setItem("access_token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-
-      // Kembalikan data user ke parent
-      if (onSuccess) onSuccess(user);
+      // Berhasil register, tampilkan pesan untuk cek email
+      if (user && !user.email_confirmed_at) {
+        error.value = null;
+        if (onSuccess) {
+          onSuccess({
+            message: "Registrasi berhasil! Silakan cek email untuk verifikasi akun Anda.",
+            needsVerification: true,
+            user
+          });
+        }
+      } else {
+        // Jika auto-confirm enabled di Supabase
+        localStorage.setItem("user", JSON.stringify(user));
+        if (onSuccess) onSuccess(user);
+        router.push("/");
+      }
     } catch (err) {
       console.error("Register error:", err);
-      const errs = err.response?.data?.errors;
-      error.value = Array.isArray(errs)
-        ? errs.join(", ")
-        : err.response?.data?.message || "Pendaftaran gagal";
+      error.value = err.message || "Pendaftaran gagal";
     } finally {
       loading.value = false;
+    }
+  };
+
+  const handleGoogleLogin = async (onSuccess) => {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      await AuthService.loginWithGoogle();
+      // Redirect handled by Supabase
+    } catch (err) {
+      console.error("Google login error:", err);
+      error.value = err.message || "Login dengan Google gagal";
+      loading.value = false;
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      // Logout dari Supabase (clear session di Supabase)
+      await AuthService.logout();
+      
+      // Hapus semua data dari localStorage
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("pendingUser");
+      
+      // Clear semua localStorage yang berkaitan dengan auth (optional: clear all)
+      // localStorage.clear(); // Uncomment jika ingin hapus semua
+      
+      // Redirect ke home
+      router.push("/");
+    } catch (err) {
+      console.error("Logout error:", err);
     }
   };
 
@@ -83,5 +119,7 @@ export function useAuth() {
     error,
     handleLogin,
     handleRegister,
+    handleGoogleLogin,
+    handleLogout,
   };
 }

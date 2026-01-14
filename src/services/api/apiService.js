@@ -1,4 +1,5 @@
-import api, { authAPI } from "../../utils/axios";
+import api from "../../utils/axios";
+import { supabase } from "../../config/supabase";
 
 export const createCrudService = (baseUrl) => ({
   getAll: (params) => api.get(baseUrl, { params }),
@@ -8,18 +9,86 @@ export const createCrudService = (baseUrl) => ({
   delete: (id) => api.delete(`${baseUrl}/${id}`),
 });
 
-// Auth Service - pakai authAPI (Node.js backend)
+// Auth Service - menggunakan Supabase Auth
 export const AuthService = {
-  login: (email, password) => authAPI.post("/auth/login", { email, password }),
-
-  register: (email, password, name) =>
-    authAPI.post("/auth/register", {
+  // Login dengan email/password
+  login: async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
-      full_name: name,
-    }),
+    });
+    if (error) throw error;
+    return data;
+  },
 
-  logout: () => authAPI.post("/auth/logout"),
+  // Register dengan email verification
+  register: async (email, password, full_name) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name },
+        emailRedirectTo: `${window.location.origin}/verify-email`,
+      },
+    });
+    if (error) throw error;
+    return data;
+  },
+
+  // Login dengan Google OAuth
+  loginWithGoogle: async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    if (error) throw error;
+    return data;
+  },
+
+  // Logout
+  logout: async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  },
+
+  // Get current session
+  getSession: async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session;
+  },
+
+  // Get current user
+  getCurrentUser: async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user;
+  },
+
+  // Resend verification email
+  resendVerification: async (email) => {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+    });
+    if (error) throw error;
+  },
+
+  // Reset password
+  resetPassword: async (email) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) throw error;
+  },
+
+  // Update password
+  updatePassword: async (newPassword) => {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+    if (error) throw error;
+  },
 };
 
 // Services lainnya - pakai api (Rust backend)

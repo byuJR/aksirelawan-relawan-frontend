@@ -9,6 +9,7 @@ import UserIcon from '../assets/images/icons/iconuser.png';
 import MenuIcon from './icons/MenuIcon.vue';
 import XIcon from './icons/XIcon.vue';
 import { useNavbar } from '../composables/useNavbar.js';
+import { supabase } from '../config/supabase';
 
 const {
   isMenuOpen,
@@ -25,21 +26,37 @@ const {
 
 const router = useRouter();
 
-const user = ref(JSON.parse(localStorage.getItem('user')) || null);
+const user = ref(null);
 
-
+// Get fresh user from Supabase on mount
+const getCurrentUser = async () => {
+  const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+  if (supabaseUser) {
+    user.value = supabaseUser;
+    localStorage.setItem('user', JSON.stringify(supabaseUser));
+  } else {
+    user.value = null;
+    localStorage.removeItem('user');
+  }
+};
 
 function handleLoginSuccess(mockUser) {
-  localStorage.setItem('user', JSON.stringify(mockUser));
   user.value = mockUser;
-
+  localStorage.setItem('user', JSON.stringify(mockUser));
   showAuthModal.value = false;
 }
 
 function handleLogout() {
+  // Clear all auth data
   localStorage.removeItem('user');
+  localStorage.removeItem('token');
+  localStorage.removeItem('access_token');
   user.value = null;
   showProfilePopup.value = false;
+  
+  // Logout from Supabase
+  supabase.auth.signOut();
+  
   router.push('/');
 }
 
@@ -72,7 +89,10 @@ const navItems = [
 const handleMenuStatusChange = (newStatus) => {
   isMenuOpen.value = newStatus
 }
-onMounted(() => {
+onMounted(async () => {
+  // Get fresh user from Supabase
+  await getCurrentUser();
+  
   gsap.from('.nav-logo-content', {
     duration: 1,
     x: -50,
@@ -145,8 +165,6 @@ onMounted(() => {
 
       <div v-else class="relative ml-auto auth-button">
         <div class="flex flex-nowrap items-center gap-2">
-          <a href="#" @click.prevent="handleNavItemClick({ path: '/dashboard' })"
-            class="rounded-lg hover:bg-gray-100 py-1 px-2">Dashboard</a>
           <img :src="user.profilePicture || UserIcon" class="w-10 h-10 rounded-full cursor-pointer"
             @click="toggleProfilePopup" />
         </div>

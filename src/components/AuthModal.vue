@@ -2,6 +2,8 @@
 import { ref } from "vue"
 import LoginForm from "./LoginForm.vue"
 import RegisterForm from "./RegisterForm.vue"
+import ForgotPasswordModal from "./ForgotPasswordModal.vue"
+import VerifyEmailModal from "./VerifyEmailModal.vue"
 import { useAuth } from "../composables/useAuth"
 import { useVolunteer } from "../composables/useVolunteer"
 
@@ -14,12 +16,16 @@ const props = defineProps({
 const emit = defineEmits(["close", "login-success"])
 
 const mode = ref(props.initialMode)
+const showForgotPassword = ref(false)
+const showVerifyEmail = ref(false)
+const verifyEmailData = ref({ email: '', verified: false })
 
 const {
   loading,
   error,
   handleLogin,
-  handleRegister
+  handleRegister,
+  handleGoogleLogin
 } = useAuth()
 
 const closeModal = () => emit("close")
@@ -32,18 +38,40 @@ const submitLogin = (form) => {
   })
 }
 
+// Handle forgot password - show modal instead of redirect
+const handleForgotPassword = () => {
+  showForgotPassword.value = true
+}
+
+const closeForgotPassword = () => {
+  showForgotPassword.value = false
+}
+
 // wrapper for register event
 const submitRegister = (form) => {
-  handleRegister(form, async (user) => {
-    await addVolunteer({
-      user_id: user.id,
-      name: form.name,
-      email: form.email
-    })
-
-    alert("Pendaftaran berhasil!")
-    mode.value = "login"
+  handleRegister(form, (result) => {
+    if (result.needsVerification) {
+      // Save email untuk resend verification
+      localStorage.setItem('pendingUser', JSON.stringify({ email: form.email }))
+      // Show verify email modal instead of redirect
+      verifyEmailData.value = { email: form.email, verified: false }
+      showVerifyEmail.value = true
+    } else {
+      // Auto-confirmed, add volunteer profile
+      addVolunteer({
+        user_id: result.id,
+        name: form.name,
+        email: form.email
+      })
+      alert("Pendaftaran berhasil!")
+      mode.value = "login"
+    }
   })
+}
+
+const closeVerifyEmail = () => {
+  showVerifyEmail.value = false
+  closeModal()
 }
 </script>
 
@@ -73,9 +101,9 @@ const submitRegister = (form) => {
           {{ mode === 'login' ? 'Masuk ke Akun Anda' : 'Daftar Akun Baru' }}
         </h2>
 
-        <LoginForm v-if="mode === 'login'" :loading="loading" :error="error" @submit="submitLogin" />
+        <LoginForm v-if="mode === 'login'" :loading="loading" :error="error" @submit="submitLogin" @google-login="handleGoogleLogin" @forgot-password="handleForgotPassword" />
 
-        <RegisterForm v-else :loading="loading" :error="error" @submit="submitRegister" />
+        <RegisterForm v-else :loading="loading" :error="error" @submit="submitRegister" @google-login="handleGoogleLogin" />
 
         <!-- TOGGLE LOGIN/REGISTER -->
         <div class="mt-6 text-center text-sm text-gray-600">
@@ -96,6 +124,12 @@ const submitRegister = (form) => {
         </div>
       </div>
     </div>
+
+    <!-- Forgot Password Modal -->
+    <ForgotPasswordModal v-if="showForgotPassword" @close="closeForgotPassword" />
+
+    <!-- Verify Email Modal -->
+    <VerifyEmailModal v-if="showVerifyEmail" @close="closeVerifyEmail" />
   </div>
 </template>
 

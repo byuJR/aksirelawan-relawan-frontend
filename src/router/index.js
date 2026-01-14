@@ -13,6 +13,10 @@ import ActivityPage from "../pages/ActivityPage.vue";
 import HomePage from "../pages/HomePage.vue";
 import RelawanPage from "../pages/RelawanPage.vue";
 import DashboardPage from "../pages/DashboardPage.vue";
+import AuthCallback from "../pages/AuthCallback.vue";
+import VerifyEmail from "../pages/VerifyEmail.vue";
+import ForgotPassword from "../pages/ForgotPassword.vue";
+import ResetPassword from "../pages/ResetPassword.vue";
 import MainLayout from "../layouts/MainLayout.vue";
 import { useHead } from "@vueuse/head";
 
@@ -153,6 +157,43 @@ const router = createRouter({
           },
         },
       ],
+    },
+    // Auth callback routes (outside MainLayout)
+    {
+      path: "/auth/callback",
+      name: "authCallback",
+      component: AuthCallback,
+      meta: {
+        title: "Login - Aksi Relawan",
+        description: "Processing login...",
+      },
+    },
+    {
+      path: "/verify-email",
+      name: "verifyEmail",
+      component: VerifyEmail,
+      meta: {
+        title: "Verifikasi Email - Aksi Relawan",
+        description: "Verifikasi akun email Anda",
+      },
+    },
+    {
+      path: "/forgot-password",
+      name: "forgotPassword",
+      component: ForgotPassword,
+      meta: {
+        title: "Lupa Password - Aksi Relawan",
+        description: "Reset password akun Anda",
+      },
+    },
+    {
+      path: "/reset-password",
+      name: "resetPassword",
+      component: ResetPassword,
+      meta: {
+        title: "Reset Password - Aksi Relawan",
+        description: "Buat password baru",
+      },
     },
   ],
 });

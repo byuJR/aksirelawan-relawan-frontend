@@ -1,58 +1,41 @@
 import axios from "axios";
+import { supabase } from "../config/supabase";
 
-// Auth API (Node.js - untuk login/register/logout)
-const AUTH_API_URL = import.meta.env.VITE_AUTH_API_URL || "http://localhost:3000";
-
-// Main API (Rust - untuk features lainnya)
+// Main API (Rust - untuk features)
 const MAIN_API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
-
-// Auth API instance (Node.js backend)
-export const authAPI = axios.create({
-  baseURL: `${AUTH_API_URL}/api`,
-});
 
 // Main API instance (Rust backend)
 const api = axios.create({
   baseURL: `${MAIN_API_URL}/api`,
 });
 
-// Auto-inject token untuk Auth API
-authAPI.interceptors.request.use((config) => {
-  const token = localStorage.getItem("access_token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
-
-// Auto-inject token untuk Main API
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("access_token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
-
-// Handle 401 errors untuk Auth API
-authAPI.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("user");
-      // Tidak redirect ke /login karena menggunakan modal popup
-      // Frontend akan handle dengan menampilkan auth modal
-    }
-    return Promise.reject(error);
+// Auto-inject Supabase token untuk Main API
+api.interceptors.request.use(async (config) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.access_token) {
+    config.headers.Authorization = `Bearer ${session.access_token}`;
   }
-);
+  return config;
+});
 
-// Handle 401 errors untuk Main API
+// Handle 401 errors - auto refresh token with Supabase
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("user");
-      // Tidak redirect ke /login karena menggunakan modal popup
-      // Frontend akan handle dengan menampilkan auth modal
+      // Try to refresh session with Supabase
+      const { data: { session }, error: refreshError } = await supabase.auth.refreshSession();
+      
+      if (refreshError || !session) {
+        // Refresh failed, sign out
+        await supabase.auth.signOut();
+        localStorage.removeItem("user");
+        // Frontend will handle showing auth modal
+      } else {
+        // Retry original request with new token
+        error.config.headers.Authorization = `Bearer ${session.access_token}`;
+        return axios.request(error.config);
+      }
     }
     return Promise.reject(error);
   }

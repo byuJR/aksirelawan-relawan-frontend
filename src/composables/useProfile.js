@@ -5,6 +5,7 @@ import {
   SkillService,
 } from "../services/api/apiService";
 import { useVolunteer } from "./useVolunteer";
+import { supabase } from "../config/supabase";
 
 export function useProfile() {
   const profile = reactive({
@@ -31,10 +32,20 @@ export function useProfile() {
   const message = ref("");
   const messageType = ref("");
 
-  const user = ref(JSON.parse(localStorage.getItem("user")) || null);
+  const user = ref(null);
 
   const { volunteers, fetchVolunteers } = useVolunteer();
   const volunteer = ref(null);
+
+  // Get fresh user data from Supabase
+  const getCurrentUser = async () => {
+    const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+    if (supabaseUser) {
+      user.value = supabaseUser;
+      localStorage.setItem("user", JSON.stringify(supabaseUser));
+    }
+    return supabaseUser;
+  };
 
   const fullPhotoUrl = computed(() => {
     if (!profile.photo_url) return null;
@@ -44,6 +55,9 @@ export function useProfile() {
   });
 
   const fetchProfile = async () => {
+    // Get fresh user from Supabase
+    await getCurrentUser();
+    
     if (!user.value) {
       profileLoaded.value = true;
       return;
