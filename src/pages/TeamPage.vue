@@ -68,7 +68,7 @@ const teamMembers = [
 
 <template>
   <div class="min-h-screen bg-white">
-    <div class="relative overflow-hidden">
+    <div class="relative overflow-hidden min-h-screen">
       <BackgroundEffect />
 
       <div class="container mx-auto px-4 py-16 relative z-10">
@@ -176,5 +176,11 @@ const teamMembers = [
 
 .container > div {
   animation: fadeInUp 0.6s ease-out;
+}
+
+/* Override BackgroundEffect to use absolute positioning */
+:deep(.background-effect) {
+  position: absolute;
+  height: 100%;
 }
 </style>
