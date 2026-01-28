@@ -103,6 +103,8 @@ export function useProfile() {
         profile.photo_url = userData.photo_url || "";
         profile.skills = userData.skills || "";
 
+        console.log('Profile updated:', profile);
+
         Object.assign(form, {
           full_name: profile.full_name,
           username: profile.username,
@@ -113,6 +115,8 @@ export function useProfile() {
           gender: profile.gender,
           skills: profile.skills,
         });
+
+        console.log('Form updated:', form);
 
         // Fetch user skills if using skills table (optional)
         // For now, we'll just use the skills text field
@@ -206,8 +210,10 @@ export function useProfile() {
     try {
       showMessage("Menyimpan profil...", "info");
 
+      console.log('Saving profile with data:', form);
+
       // Update user data in Supabase
-      const { error } = await supabase
+      const { data: updatedData, error } = await supabase
         .from('users')
         .update({
           full_name: form.full_name,
@@ -218,20 +224,34 @@ export function useProfile() {
           skills: form.skills,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', profile.id);
+        .eq('id', profile.id)
+        .select()
+        .single();
+
+      console.log('Update result:', updatedData);
+      console.log('Update error:', error);
 
       if (error) {
         throw error;
       }
 
-      // Update local profile state
-      Object.assign(profile, form);
-
-      // Fetch fresh data
-      await fetchProfile();
+      // Update local profile state immediately
+      if (updatedData) {
+        profile.full_name = updatedData.full_name || "";
+        profile.phone = updatedData.phone || "";
+        profile.address = updatedData.address || "";
+        profile.date_of_birth = updatedData.date_of_birth || "";
+        profile.gender = updatedData.gender || "";
+        profile.skills = updatedData.skills || "";
+      }
 
       isEditing.value = false;
       showMessage("Profil berhasil diperbarui", "success");
+      
+      // Fetch fresh data to ensure sync
+      setTimeout(() => {
+        fetchProfile();
+      }, 500);
     } catch (err) {
       console.error("saveProfile error:", err);
       showMessage("Gagal menyimpan profil: " + err.message, "error");
