@@ -1,10 +1,11 @@
 <script setup>
-import { defineProps } from 'vue'
+import { computed, defineProps } from 'vue'
 import aksiImage from "../../assets/images/Aksi.png";
 
 function onImgError(e) {
   e.target.src = aksiImage;
 }
+
 // Mendefinisikan props untuk menerima data activity
 const props = defineProps({
   activity: {
@@ -17,6 +18,9 @@ const props = defineProps({
   },
   cardClass: String
 })
+
+// Computed property for image with fallback
+const imageUrl = computed(() => props.activity.image || aksiImage)
 
 // Fungsi untuk menentukan class kategori berdasarkan nilai kategori
 const getCategoryClass = (category) => {
@@ -36,7 +40,7 @@ const getCategoryClass = (category) => {
 
     <!-- Gambar -->
     <div class="h-44 overflow-hidden">
-      <img :src="activity.image" @error="onImgError" class="w-full h-full object-cover" :alt="activity.title" />
+      <img :src="imageUrl" @error="onImgError" class="w-full h-full object-cover" :alt="activity.title" />
     </div>
 
     <!-- Konten -->
