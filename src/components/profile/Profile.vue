@@ -51,9 +51,9 @@ const onFileChange = async (e) => {
   }
 
   // Validate file type
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/gif'];
   if (!allowedTypes.includes(file.type)) {
-    message.value = 'Format file harus JPEG, PNG, atau WebP';
+    message.value = 'Format file harus JPEG, PNG, WebP, atau GIF';
     messageType.value = 'error';
     setTimeout(() => { message.value = ''; }, 3000);
     return;
@@ -70,17 +70,38 @@ const onFileChange = async (e) => {
     
     // IMPORTANT: Use auth user id for RLS policy (not profile.id)
     const authUserId = currentUser.id;
-    const fileExt = file.name.split('.').pop();
+    
+    // Use original file extension
+    const fileExt = file.name.split('.').pop().toLowerCase();
     const filePath = `${authUserId}/avatar.${fileExt}`;
 
-    // Delete old avatar if exists
-    if (profile.photo_url) {
-      try {
-        const oldPath = profile.photo_url.split('/').slice(-2).join('/');
-        await deleteFile('user-avatars', oldPath);
-      } catch (err) {
-        console.log('Old avatar not found or already deleted');
+    console.log('Auth User ID:', authUserId);
+    console.log('Upload path:', filePath);
+
+    // Delete all old avatars in user folder (any extension)
+    try {
+      const { data: existingFiles } = await supabase.storage
+        .from('user-avatars')
+        .list(authUserId);
+      
+      console.log('Existing files:', existingFiles);
+      
+      if (existingFiles && existingFiles.length > 0) {
+        const filesToDelete = existingFiles.map(f => `${authUserId}/${f.name}`);
+        console.log('Deleting old files:', filesToDelete);
+        
+        const { error: deleteError } = await supabase.storage
+          .from('user-avatars')
+          .remove(filesToDelete);
+        
+        if (deleteError) {
+          console.warn('Failed to delete old files:', deleteError);
+        } else {
+          console.log('Old files deleted successfully');
+        }
       }
+    } catch (err) {
+      console.log('Error checking/deleting old files:', err);
     }
 
     // Upload new avatar to Supabase Storage
@@ -364,7 +385,7 @@ const addSelectedSkill = () => {
           @close="showPhotoPopup = false" @upload="triggerFileInput" @delete="deletePhoto" />
       </transition>
 
-      <input type="file" ref="fileInput" @change="onFileChange" accept="image/jpeg,image/png,image/webp,image/jpg"
+      <input type="file" ref="fileInput" @change="onFileChange" accept="image/jpeg,image/png,image/webp,image/jpg,image/gif"
         style="display: none" />
 
       <!-- Message Notification -->
