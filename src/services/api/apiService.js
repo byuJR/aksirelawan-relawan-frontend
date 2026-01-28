@@ -111,11 +111,23 @@ export const ActivityService = {
     if (error) throw error;
 
     // Transform data to match expected format
-    const items = data.map(activity => ({
-      ...activity,
-      organization_name: activity.organizations?.organization_name || 'Organisasi',
-      image_url: activity.thumbnail_url || null
-    }));
+    const items = data.map(activity => {
+      let imageUrl = null;
+      
+      // If thumbnail_url exists, get public URL from storage
+      if (activity.thumbnail_url) {
+        const { data: urlData } = supabase.storage
+          .from('activity-images')
+          .getPublicUrl(activity.thumbnail_url);
+        imageUrl = urlData?.publicUrl;
+      }
+
+      return {
+        ...activity,
+        organization_name: activity.organizations?.organization_name || 'Organisasi',
+        image_url: imageUrl
+      };
+    });
 
     return { data: { data: { items } } };
   },
@@ -137,11 +149,21 @@ export const ActivityService = {
 
     if (error) throw error;
 
+    let imageUrl = null;
+    
+    // If thumbnail_url exists, get public URL from storage
+    if (data.thumbnail_url) {
+      const { data: urlData } = supabase.storage
+        .from('activity-images')
+        .getPublicUrl(data.thumbnail_url);
+      imageUrl = urlData?.publicUrl;
+    }
+
     return {
       data: {
         ...data,
         organization_name: data.organizations?.organization_name || 'Organisasi',
-        image_url: data.thumbnail_url || null
+        image_url: imageUrl
       }
     };
   },

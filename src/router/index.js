@@ -11,7 +11,6 @@ import SponsorPage from "../pages/SponsorPage.vue";
 import ProfilePage from "../pages/ProfilePage.vue";
 import ActivityPage from "../pages/ActivityPage.vue";
 import HomePage from "../pages/HomePage.vue";
-import RelawanPage from "../pages/RelawanPage.vue";
 import AuthCallback from "../pages/AuthCallback.vue";
 import VerifyEmail from "../pages/VerifyEmail.vue";
 import ForgotPassword from "../pages/ForgotPassword.vue";
@@ -134,15 +133,6 @@ const router = createRouter({
             title: "Aktivitas - Aksi Relawan",
             description:
               "Lihat aktivitas yang telah dilakukan oleh Aksi Relawan.",
-          },
-        },
-        {
-          path: "/relawan",
-          name: "relawan",
-          component: RelawanPage,
-          meta: {
-            title: "Relawan - Aksi Relawan",
-            description: "Gabung sebagai relawan untuk Aksi Relawan.",
           },
         },
       ],

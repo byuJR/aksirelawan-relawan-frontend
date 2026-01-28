@@ -3,12 +3,10 @@ import { ref, onMounted } from 'vue'
 import { gsap } from 'gsap'
 import backgroundImage from '../../assets/images/background.png'
 import FeatureCards from './FeatureCards.vue'
-import RelawanIcon from '../icons/RelawanIcon.vue';
 import OrganisasiIcon from '../icons/OrganisasiIcon.vue';
 import AktivitasIcon from '../icons/AktivitasIcon.vue';
 
 const infoItems = [
-  { label: 'Relawan', icon: RelawanIcon, to: '/relawan' },
   { label: 'Organisasi', icon: OrganisasiIcon, to: '/organisasi' },
   { label: 'Aktivitas', icon: AktivitasIcon, to: '/aktivitas' },
 ]
