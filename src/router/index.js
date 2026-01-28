@@ -12,7 +12,6 @@ import ProfilePage from "../pages/ProfilePage.vue";
 import ActivityPage from "../pages/ActivityPage.vue";
 import HomePage from "../pages/HomePage.vue";
 import RelawanPage from "../pages/RelawanPage.vue";
-import DashboardPage from "../pages/DashboardPage.vue";
 import AuthCallback from "../pages/AuthCallback.vue";
 import VerifyEmail from "../pages/VerifyEmail.vue";
 import ForgotPassword from "../pages/ForgotPassword.vue";
@@ -144,16 +143,6 @@ const router = createRouter({
           meta: {
             title: "Relawan - Aksi Relawan",
             description: "Gabung sebagai relawan untuk Aksi Relawan.",
-          },
-        },
-        {
-          path: "/dashboard",
-          name: "Dashboard",
-          component: DashboardPage,
-          meta: {
-            title: "Dashboard - Aksi Relawan",
-            description: "Dashboard untuk melihat status Aksi Relawan.",
-            // requiresAuth: true,
           },
         },
       ],

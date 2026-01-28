@@ -31,7 +31,7 @@ onMounted(async () => {
       localStorage.setItem('user', JSON.stringify(session.user));
       
       message.value = 'Login berhasil! Mengalihkan...';
-      setTimeout(() => router.push('/dashboard'), 1000);
+      setTimeout(() => router.push('/'), 1000);
     } else {
       message.value = 'Session tidak ditemukan';
       setTimeout(() => router.push('/'), 3000);

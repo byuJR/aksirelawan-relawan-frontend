@@ -36,7 +36,7 @@ onMounted(async () => {
     title.value = 'Email Terverifikasi! ✅';
     message.value = 'Akun Anda telah berhasil diverifikasi. Anda akan dialihkan ke dashboard...';
     localStorage.setItem('user', JSON.stringify(session.user));
-    setTimeout(() => router.push('/dashboard'), 2000);
+    setTimeout(() => router.push('/'), 2000);
   } else if (error || !session) {
     title.value = 'Verifikasi Email Diperlukan';
     message.value = 'Silakan cek email Anda dan klik link verifikasi yang telah kami kirimkan.';
