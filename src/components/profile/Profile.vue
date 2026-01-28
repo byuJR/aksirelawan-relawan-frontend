@@ -37,8 +37,13 @@ const avatarTimestamp = ref(Date.now());
 
 // Computed property for avatar with cache busting
 const avatarUrl = computed(() => {
-  if (previewImage.value) return previewImage.value;
-  if (profile.photo_url) return `${profile.photo_url}?t=${avatarTimestamp.value}`;
+  if (previewImage.value) {
+    return previewImage.value;
+  }
+  if (profile.photo_url && profile.photo_url.trim()) {
+    // Always add timestamp for cache busting
+    return `${profile.photo_url}?t=${avatarTimestamp.value}`;
+  }
   return defaultUserIcon;
 });
 
