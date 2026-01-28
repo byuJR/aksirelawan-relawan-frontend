@@ -102,7 +102,6 @@ export const ActivityService = {
         organizations (
           id,
           organization_name,
-          organization_type,
           contact_person,
           contact_email,
           photo_url
@@ -132,7 +131,6 @@ export const ActivityService = {
         organizations (
           id,
           organization_name,
-          organization_type,
           contact_person,
           contact_email,
           photo_url
