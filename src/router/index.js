@@ -1,9 +1,10 @@
 import { createRouter, createWebHistory } from "vue-router";
 import AboutPage from "../pages/tentang/AboutPage.vue";
 import VisiMisiPage from "../pages/tentang/VisiMisiPage.vue";
-import DonasiSekarangPage from "../pages/tentang/donasi/DonasiSekarangPage.vue";
-import DonationPage from "../pages/tentang/donasi/DonationPage.vue";
-import TeamPage from "../pages/tentang/TeamPage.vue";
+// Donation pages - disabled for now
+// import DonasiSekarangPage from "../pages/tentang/donasi/DonasiSekarangPage.vue";
+// import DonationPage from "../pages/tentang/donasi/DonationPage.vue";
+import TeamPage from "../pages/TeamPage.vue";
 import ContactPage from "../pages/tentang/ContactPage.vue";
 import LiputanPage from "../pages/LiputanPage.vue";
 import OrganisasiPage from "../pages/OrganisasiPage.vue";
@@ -52,24 +53,25 @@ const router = createRouter({
             description: "Visi dan misi program Aksi Relawan.",
           },
         },
-        {
-          path: "/tentang/donasi",
-          name: "donasi",
-          component: DonationPage,
-          meta: {
-            title: "Donasi - Aksi Relawan",
-            description: "Donasi untuk mendukung Aksi Relawan.",
-          },
-        },
-        {
-          path: "/tentang/donasi/donasi-sekarang",
-          name: "donasiSekarang",
-          component: DonasiSekarangPage,
-          meta: {
-            title: "Donasi Sekarang - Aksi Relawan",
-            description: "Donasi sekarang untuk mendukung aksi relawan.",
-          },
-        },
+        // DONATION ROUTES - DISABLED (Keep for future use)
+        // {
+        //   path: "/tentang/donasi",
+        //   name: "donasi",
+        //   component: DonationPage,
+        //   meta: {
+        //     title: "Donasi - Aksi Relawan",
+        //     description: "Donasi untuk mendukung Aksi Relawan.",
+        //   },
+        // },
+        // {
+        //   path: "/tentang/donasi/donasi-sekarang",
+        //   name: "donasiSekarang",
+        //   component: DonasiSekarangPage,
+        //   meta: {
+        //     title: "Donasi Sekarang - Aksi Relawan",
+        //     description: "Donasi sekarang untuk mendukung aksi relawan.",
+        //   },
+        // },
         {
           path: "/tentang/tim-aksi-relawan",
           name: "timAksiRelawan",

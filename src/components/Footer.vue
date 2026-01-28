@@ -62,7 +62,8 @@ onMounted(() => {
         <ul class="text-left space-y-3 sm:ml-10">
           <!-- Menggunakan @click.prevent untuk mencegah reload dan menggunakan Vue Router -->
           <li><a href="#" @click.prevent="navigateTo('/liputan-media')" class="cursor-pointer">Liputan Media</a></li>
-          <li><a href="#" @click.prevent="navigateTo('/tentang/donasi')" class="cursor-pointer">Donasi Sekarang</a>
+          <li><a href="#" @click.prevent="navigateTo('/tentang/tim-aksi-relawan')" class="cursor-pointer">Tim Aksi Relawan</a>
+          <!-- <li><a href="#" @click.prevent="navigateTo('/tentang/donasi')" class="cursor-pointer">Donasi Sekarang</a> -->
           </li>
           <li><a href="#" @click.prevent="navigateTo('/sponsor')" class="cursor-pointer">Sponsor</a></li>
           <li><a href="#" @click.prevent="navigateTo('/tentang/kontak-kami')" class="cursor-pointer">Kontak Kami</a>

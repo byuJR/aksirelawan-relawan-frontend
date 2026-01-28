@@ -9,8 +9,9 @@ const emit = defineEmits(['close', 'updateMenuStatus']);
 const menuItems = [
   { label: 'Tentang Aksi Relawan', path: '/tentang' },
   { label: 'Visi Misi & Program', path: '/tentang/visi-misi-program' },
-  { label: 'Donasi', path: '/tentang/donasi' },
+  { label: 'Tim Aksi Relawan', path: '/tentang/tim-aksi-relawan' },
   { label: 'Kontak Kami', path: '/tentang/kontak-kami' }
+  // { label: 'Donasi', path: '/tentang/donasi' }, // Disabled for now
 ];
 
 function handleNavItemClick(item) {
