@@ -185,7 +185,95 @@ export const ActivityService = {
   update: (id, data) => api.put(`/activities/${id}`, data),
   delete: (id) => api.delete(`/activities/${id}`),
 };
-export const OrganizationService = createCrudService("/organizations");
+
+// Organization Service - using Supabase direct access
+export const OrganizationService = {
+  // Get all public organizations
+  getAll: async (params) => {
+    const { data, error } = await supabase
+      .from('organizations')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    // Transform data to match expected format
+    const items = data.map(org => {
+      let logoUrl = null;
+      
+      // If photo_url exists, check if it's already a full URL or just a path
+      if (org.photo_url) {
+        // If it starts with http, it's already a full URL
+        if (org.photo_url.startsWith('http')) {
+          logoUrl = org.photo_url;
+        } else {
+          // It's a path, get public URL from storage
+          const { data: urlData } = supabase.storage
+            .from('organization-photos')
+            .getPublicUrl(org.photo_url);
+          logoUrl = urlData?.publicUrl;
+        }
+      }
+
+      return {
+        id: org.id,
+        name: org.organization_name,
+        description: org.description || '',
+        category: org.category || 'Umum',
+        email: org.email || 'Tidak diketahui',
+        phone: org.phone || 'Tidak diketahui',
+        address: org.address || 'Tidak diketahui',
+        image_url: logoUrl
+      };
+    });
+
+    return { data: { data: { items } } };
+  },
+
+  // Get single organization by ID
+  getById: async (id) => {
+    const { data, error } = await supabase
+      .from('organizations')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+
+    let logoUrl = null;
+    
+    // If photo_url exists, check if it's already a full URL or just a path
+    if (data.photo_url) {
+      if (data.photo_url.startsWith('http')) {
+        logoUrl = data.photo_url;
+      } else {
+        const { data: urlData } = supabase.storage
+          .from('organization-photos')
+          .getPublicUrl(data.photo_url);
+        logoUrl = urlData?.publicUrl;
+      }
+    }
+
+    return {
+      data: {
+        id: data.id,
+        name: data.organization_name,
+        description: data.description || '',
+        category: data.category || 'Umum',
+        email: data.email || 'Tidak diketahui',
+        phone: data.phone || 'Tidak diketahui',
+        address: data.address || 'Tidak diketahui',
+        image_url: logoUrl
+      }
+    };
+  },
+
+  // These endpoints require authentication
+  create: (data) => api.post("/organizations", data),
+  update: (id, data) => api.put(`/organizations/${id}`, data),
+  delete: (id) => api.delete(`/organizations/${id}`),
+};
+
 export const SkillService = createCrudService("/skills");
 export const CategoryService = createCrudService("/categories");
 export const VolunteerService = createCrudService("/relawan");
