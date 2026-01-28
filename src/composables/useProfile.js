@@ -67,9 +67,12 @@ export function useProfile() {
     await getCurrentUser();
     
     if (!user.value) {
+      console.log('No user found in auth');
       profileLoaded.value = true;
       return;
     }
+
+    console.log('Fetching profile for user:', user.value.id);
 
     try {
       // Fetch user data from users table
@@ -78,6 +81,9 @@ export function useProfile() {
         .select('*')
         .eq('auth_user_id', user.value.id)
         .single();
+
+      console.log('User data from DB:', userData);
+      console.log('Error:', error);
 
       if (error) {
         console.error('Error fetching user data:', error);
