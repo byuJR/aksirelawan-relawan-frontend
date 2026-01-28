@@ -66,9 +66,9 @@ const onFileChange = async (e) => {
     const filePath = `${userId}/avatar.${fileExt}`;
 
     // Delete old avatar if exists
-    if (profile.value.photo_url) {
+    if (profile.photo_url) {
       try {
-        const oldPath = profile.value.photo_url.split('/').slice(-2).join('/');
+        const oldPath = profile.photo_url.split('/').slice(-2).join('/');
         await deleteFile('user-avatars', oldPath);
       } catch (err) {
         console.log('Old avatar not found or already deleted');
@@ -97,7 +97,7 @@ const onFileChange = async (e) => {
     if (updateError) throw updateError;
 
     // Update local state
-    profile.value.photo_url = newAvatarUrl;
+    profile.photo_url = newAvatarUrl;
     previewImage.value = newAvatarUrl;
 
     message.value = 'Foto profil berhasil diupdate!';
@@ -147,14 +147,14 @@ const fields = [
 ];
 
 const genderLabel = computed(() => {
-  if (!profile.value.gender) return 'Belum diisi';
+  if (!profile || !profile.gender) return 'Belum diisi';
   const genderMap = {
     'male': 'Laki-laki',
     'female': 'Perempuan',
     'other': 'Lainnya',
     'prefer_not_to_say': 'Lebih Baik Tidak Disebutkan'
   };
-  return genderMap[profile.value.gender] || profile.value.gender;
+  return genderMap[profile.gender] || profile.gender;
 });
 
 const formatDate = (dateString) => {
