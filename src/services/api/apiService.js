@@ -219,10 +219,10 @@ export const OrganizationService = {
         id: org.id,
         name: org.organization_name,
         description: org.description || '',
-        category: org.category || 'Umum',
-        email: org.email || 'Tidak diketahui',
-        phone: org.phone || 'Tidak diketahui',
-        address: org.address || 'Tidak diketahui',
+        category: org.field_of_work || 'Umum',
+        email: org.official_email || 'Tidak diketahui',
+        phone: org.official_phone || 'Tidak diketahui',
+        address: org.office_address || 'Tidak diketahui',
         image_url: logoUrl
       };
     });
@@ -259,10 +259,10 @@ export const OrganizationService = {
         id: data.id,
         name: data.organization_name,
         description: data.description || '',
-        category: data.category || 'Umum',
-        email: data.email || 'Tidak diketahui',
-        phone: data.phone || 'Tidak diketahui',
-        address: data.address || 'Tidak diketahui',
+        category: data.field_of_work || 'Umum',
+        email: data.official_email || 'Tidak diketahui',
+        phone: data.official_phone || 'Tidak diketahui',
+        address: data.office_address || 'Tidak diketahui',
         image_url: logoUrl
       }
     };
