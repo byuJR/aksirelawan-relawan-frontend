@@ -69,12 +69,12 @@ const teamMembers = [
   <div class="min-h-screen bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
     <!-- Floating Background Shapes -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
-      <div class="floating-circle bg-indigo-200 opacity-30" style="width: 300px; height: 300px; top: -150px; left: -100px;"></div>
-      <div class="floating-circle bg-purple-200 opacity-30" style="width: 200px; height: 200px; top: 20%; right: -50px; animation-delay: 2s;"></div>
-      <div class="floating-circle bg-blue-200 opacity-30" style="width: 250px; height: 250px; top: 50%; left: -80px; animation-delay: 4s;"></div>
-      <div class="floating-circle bg-indigo-300 opacity-25" style="width: 180px; height: 180px; top: 70%; right: 10%; animation-delay: 1s;"></div>
-      <div class="floating-circle bg-purple-300 opacity-25" style="width: 220px; height: 220px; bottom: -100px; left: 20%; animation-delay: 3s;"></div>
-      <div class="floating-circle bg-blue-300 opacity-30" style="width: 150px; height: 150px; top: 40%; right: 5%; animation-delay: 5s;"></div>
+      <div class="floating-circle bg-indigo-300 opacity-20" style="width: 300px; height: 300px; top: -150px; left: -100px;"></div>
+      <div class="floating-circle bg-indigo-400 opacity-15" style="width: 200px; height: 200px; top: 20%; right: -50px; animation-delay: 2s;"></div>
+      <div class="floating-circle bg-indigo-500 opacity-20" style="width: 250px; height: 250px; top: 50%; left: -80px; animation-delay: 4s;"></div>
+      <div class="floating-circle bg-indigo-400 opacity-15" style="width: 180px; height: 180px; top: 70%; right: 10%; animation-delay: 1s;"></div>
+      <div class="floating-circle bg-indigo-600 opacity-15" style="width: 220px; height: 220px; bottom: -100px; left: 20%; animation-delay: 3s;"></div>
+      <div class="floating-circle bg-indigo-500 opacity-20" style="width: 150px; height: 150px; top: 40%; right: 5%; animation-delay: 5s;"></div>
     </div>
 
     <div class="container mx-auto px-4 py-16 relative z-10">
