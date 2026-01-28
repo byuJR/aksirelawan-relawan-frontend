@@ -33,6 +33,14 @@ const originalSkills = ref([]);
 
 const skillsOptions = ref([]);
 const selectedSkillId = ref("");
+const avatarTimestamp = ref(Date.now());
+
+// Computed property for avatar with cache busting
+const avatarUrl = computed(() => {
+  if (previewImage.value) return previewImage.value;
+  if (profile.photo_url) return `${profile.photo_url}?t=${avatarTimestamp.value}`;
+  return defaultUserIcon;
+});
 
 const triggerFileInput = () => fileInput.value.click();
 
@@ -116,15 +124,20 @@ const onFileChange = async (e) => {
 
     console.log('Upload success! Getting public URL...');
 
-    // Get public URL
-    const newAvatarUrl = await getPublicUrl('user-avatars', filePath);
+    // Get public URL with cache busting
+    const baseUrl = await getPublicUrl('user-avatars', filePath);
+    const newAvatarUrl = `${baseUrl}?t=${Date.now()}`; // Add timestamp for cache busting
+    
     console.log('Public URL:', newAvatarUrl);
     console.log('Updating database for user id:', profile.id);
 
     // Update user record in database (use profile.id)
     const { error: updateError } = await supabase
       .from('users')
-      .update({ photo_url: newAvatarUrl })
+      .update({ 
+        photo_url: baseUrl, // Save without timestamp in DB
+        updated_at: new Date().toISOString()
+      })
       .eq('id', profile.id);
 
     console.log('Database update error:', updateError);
@@ -133,9 +146,15 @@ const onFileChange = async (e) => {
 
     console.log('Database updated successfully!');
 
-    // Update local state
-    profile.photo_url = newAvatarUrl;
-    previewImage.value = newAvatarUrl;
+    // Update local state with cache busting URL
+    profile.photo_url = baseUrl;
+    previewImage.value = newAvatarUrl; // Use timestamp version for immediate display
+    
+    // Update timestamp to force image reload
+    avatarTimestamp.value = Date.now();
+
+    // Refresh profile to get latest data
+    await fetchProfile();
 
     message.value = 'Foto profil berhasil diupdate!';
     messageType.value = 'success';
@@ -149,6 +168,10 @@ const onFileChange = async (e) => {
     setTimeout(() => { message.value = ''; }, 3000);
   } finally {
     uploadingAvatar.value = false;
+    // Force reload image
+    if (fileInput.value) {
+      fileInput.value.value = '';
+    }
   }
 };
 
@@ -239,7 +262,7 @@ const addSelectedSkill = () => {
         <div
           class="flex-shrink-0 w-56 h-56 mx-auto md:mx-0 cursor-pointer relative mb-4 md:mb-0 transition-all duration-300 profile-photo-container"
           @click="showPhotoPopup = true">
-          <img :src="previewImage || fullPhotoUrl || defaultUserIcon" alt="Foto Profil"
+          <img :src="avatarUrl" alt="Foto Profil"
             class="w-full h-full rounded-full object-cover border-4 border-indigo-800" />
           <div
             class="absolute inset-0 rounded-full bg-black opacity-0 hover:opacity-25 transition-opacity flex items-center justify-center">
