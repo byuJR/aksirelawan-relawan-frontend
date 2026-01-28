@@ -9,20 +9,28 @@ import { supabase } from "../config/supabase";
 
 export function useProfile() {
   const profile = reactive({
-    id: null, // volunteer_id
-    name: "",
+    id: null, // user id
+    full_name: "",
+    username: "",
     email: "",
     phone: "",
     address: "",
+    date_of_birth: "",
+    gender: "",
     photo_url: "",
+    skills: "",
     volunteer_skills: [], // [{id,name}]
   });
 
   const form = reactive({
-    name: "",
+    full_name: "",
+    username: "",
     email: "",
     phone: "",
     address: "",
+    date_of_birth: "",
+    gender: "",
+    skills: "",
   });
 
   const isEditing = ref(false);
@@ -55,7 +63,7 @@ export function useProfile() {
   });
 
   const fetchProfile = async () => {
-    // Get fresh user from Supabase
+    // Get fresh user from Supabase Auth
     await getCurrentUser();
     
     if (!user.value) {
@@ -64,53 +72,45 @@ export function useProfile() {
     }
 
     try {
-      await fetchVolunteers();
+      // Fetch user data from users table
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('auth_user_id', user.value.id)
+        .single();
 
-      // cari volunteer berdasarkan user_id
-      volunteer.value =
-        volunteers.value.find((v) => v.user_id === user.value.id) || null;
-
-      // jika belum punya volunteer → profil kosong
-      if (!volunteer.value) {
+      if (error) {
+        console.error('Error fetching user data:', error);
         profileLoaded.value = true;
         return;
       }
 
-      const res = await VolunteerService.getById(volunteer.value.id);
-      const v = res.data?.data || res.data;
+      if (userData) {
+        profile.id = userData.id;
+        profile.full_name = userData.full_name || "";
+        profile.username = userData.username || "";
+        profile.email = userData.email || user.value.email || "";
+        profile.phone = userData.phone || "";
+        profile.address = userData.address || "";
+        profile.date_of_birth = userData.date_of_birth || "";
+        profile.gender = userData.gender || "";
+        profile.photo_url = userData.photo_url || "";
+        profile.skills = userData.skills || "";
 
-      profile.id = v.id;
-      profile.name = v.name || "";
-      profile.email = v.email || "";
-      profile.phone = v.phone || "";
-      profile.address = v.address || "";
-      profile.photo_url = v.photo_url || "";
-
-      Object.assign(form, profile);
-
-      if (Array.isArray(v.volunteer_skills)) {
-        profile.volunteer_skills = v.volunteer_skills;
-      } else {
-        // fallback fetch join table
-        const skillLinks = await VolunteerSkillService.getAll({
-          relawan_id: v.id,
+        Object.assign(form, {
+          full_name: profile.full_name,
+          username: profile.username,
+          email: profile.email,
+          phone: profile.phone,
+          address: profile.address,
+          date_of_birth: profile.date_of_birth,
+          gender: profile.gender,
+          skills: profile.skills,
         });
 
-        const linkItems =
-          skillLinks.data?.data?.items ||
-          skillLinks.data?.data ||
-          skillLinks.data ||
-          [];
-
-        const skillIds = linkItems.map((s) => s.skill_id);
-
-        const detail = await Promise.all(
-          skillIds.map((id) =>
-            SkillService.getById(id).then((r) => r.data?.data || r.data)
-          )
-        );
-
-        profile.volunteer_skills = detail;
+        // Fetch user skills if using skills table (optional)
+        // For now, we'll just use the skills text field
+        profile.volunteer_skills = [];
       }
     } catch (err) {
       console.error("fetchProfile error:", err);
@@ -195,80 +195,70 @@ export function useProfile() {
   };
 
   const saveProfile = async () => {
-    if (!user.value) return;
+    if (!user.value || !profile.id) return;
 
     try {
       showMessage("Menyimpan profil...", "info");
 
-      // UPDATE atau CREATE relawan
-      if (profile.id) {
-        await VolunteerService.update(profile.id, {
-          name: form.name,
+      // Update user data in Supabase
+      const { error } = await supabase
+        .from('users')
+        .update({
+          full_name: form.full_name,
           phone: form.phone,
           address: form.address,
-        });
-      } else {
-        const res = await VolunteerService.create({
-          user_id: user.value.id,
-          name: form.name,
-          phone: form.phone,
-          address: form.address,
-        });
+          date_of_birth: form.date_of_birth || null,
+          gender: form.gender || null,
+          skills: form.skills,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', profile.id);
 
-        profile.id = res.data?.data?.id || res.data?.id;
+      if (error) {
+        throw error;
       }
 
+      // Update local profile state
       Object.assign(profile, form);
 
-      // SYNC skills
-      console.log(
-        "Before syncSkillLinks - profile.volunteer_skills:",
-        profile.volunteer_skills
-      );
-      const skillIds = profile.volunteer_skills.map((s) => s.id);
-      console.log("skillIds to sync:", skillIds);
-      await syncSkillLinks(profile.id, skillIds);
-
-      // FETCH ulang (fresh)
+      // Fetch fresh data
       await fetchProfile();
 
       isEditing.value = false;
       showMessage("Profil berhasil diperbarui", "success");
     } catch (err) {
       console.error("saveProfile error:", err);
-      showMessage("Gagal menyimpan profil", "error");
+      showMessage("Gagal menyimpan profil: " + err.message, "error");
     }
   };
 
   const handlePhotoChange = async (file) => {
     if (!file || !profile.id) return;
-    try {
-      showMessage("Mengunggah foto...", "info");
-
-      const fd = new FormData();
-      fd.append("photo", file);
-
-      const res = await VolunteerService.uploadPhoto(profile.id, fd);
-      profile.photo_url = res.data.photo_url;
-      previewImage.value = null;
-
-      showMessage("Foto profil berhasil diubah", "success");
-    } catch (e) {
-      console.error("upload photo error:", e);
-      showMessage("Gagal mengunggah foto", "error");
-    }
+    // This function is now handled in Profile.vue with Supabase Storage
+    // Keeping it here for compatibility
+    console.log('handlePhotoChange called, but now handled in Profile.vue');
   };
 
   const deletePhoto = async () => {
-    if (!profile.id) return;
+    if (!profile.id || !user.value) return;
     try {
-      await VolunteerService.update(profile.id, { photo_url: null });
+      showMessage("Menghapus foto...", "info");
+
+      // Update users table to remove photo_url
+      const { error } = await supabase
+        .from('users')
+        .update({ photo_url: null })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+
       profile.photo_url = null;
+      previewImage.value = null;
 
       showMessage("Foto profil dihapus", "success");
     } catch (e) {
       console.error("delete photo error:", e);
-      showMessage("Gagal menghapus foto", "error");
+      showMessage("Gagal menghapus foto: " + e.message, "error");
     }
   };
 

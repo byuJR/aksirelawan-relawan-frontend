@@ -1,13 +1,18 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useProfile } from "../../composables/useProfile.js";
 import defaultUserIcon from "../../assets/images/icons/iconuser.png";
 import Loader from "../Loader.vue";
 import PenIcon from "../icons/PenIcon.vue";
 import PhotoModal from "./PhotoModal.vue";
+import { uploadFile, getPublicUrl, deleteFile } from "../../services/storageService.js";
+import { supabase } from "../../config/supabase";
+import { useAuth } from "../../composables/useAuth.js";
 
 const fileInput = ref(null);
 const showPhotoPopup = ref(false);
+const uploadingAvatar = ref(false);
+const { user } = useAuth();
 
 const {
   profile,
@@ -32,7 +37,83 @@ const skillsOptions = ref([]);
 const selectedSkillId = ref("");
 
 const triggerFileInput = () => fileInput.value.click();
-const onFileChange = (e) => handlePhotoChange(e.target.files[0]);
+
+const onFileChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  // Validate file size (5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    message.value = 'Ukuran file maksimal 5MB';
+    messageType.value = 'error';
+    setTimeout(() => { message.value = ''; }, 3000);
+    return;
+  }
+
+  // Validate file type
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+  if (!allowedTypes.includes(file.type)) {
+    message.value = 'Format file harus JPEG, PNG, atau WebP';
+    messageType.value = 'error';
+    setTimeout(() => { message.value = ''; }, 3000);
+    return;
+  }
+
+  try {
+    uploadingAvatar.value = true;
+    const userId = user.value.id;
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${userId}/avatar.${fileExt}`;
+
+    // Delete old avatar if exists
+    if (profile.value.photo_url) {
+      try {
+        const oldPath = profile.value.photo_url.split('/').slice(-2).join('/');
+        await deleteFile('user-avatars', oldPath);
+      } catch (err) {
+        console.log('Old avatar not found or already deleted');
+      }
+    }
+
+    // Upload new avatar to Supabase Storage
+    const { error: uploadError } = await uploadFile(
+      'user-avatars',
+      filePath,
+      file,
+      { upsert: true }
+    );
+
+    if (uploadError) throw uploadError;
+
+    // Get public URL
+    const newAvatarUrl = await getPublicUrl('user-avatars', filePath);
+
+    // Update user record in database
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ photo_url: newAvatarUrl })
+      .eq('id', userId);
+
+    if (updateError) throw updateError;
+
+    // Update local state
+    profile.value.photo_url = newAvatarUrl;
+    previewImage.value = newAvatarUrl;
+
+    message.value = 'Foto profil berhasil diupdate!';
+    messageType.value = 'success';
+    setTimeout(() => { message.value = ''; }, 3000);
+
+    showPhotoPopup.value = false;
+  } catch (error) {
+    console.error('Avatar upload error:', error);
+    message.value = 'Gagal upload foto: ' + error.message;
+    messageType.value = 'error';
+    setTimeout(() => { message.value = ''; }, 3000);
+  } finally {
+    uploadingAvatar.value = false;
+  }
+};
 
 const removeSkillById = (id) => {
   removeSkillLocal(id);
@@ -51,11 +132,36 @@ const cancelEdit = () => {
 };
 
 const fields = [
-  { key: 'name', label: 'Nama' },
+  { key: 'full_name', label: 'Nama Lengkap' },
   { key: 'email', label: 'Email' },
   { key: 'phone', label: 'Telepon' },
-  { key: 'address', label: 'Alamat' },
+  { key: 'date_of_birth', label: 'Tanggal Lahir', inputType: 'date' },
+  { key: 'gender', label: 'Jenis Kelamin', type: 'select', options: [
+    { value: '', label: 'Pilih Jenis Kelamin' },
+    { value: 'male', label: 'Laki-laki' },
+    { value: 'female', label: 'Perempuan' },
+    { value: 'other', label: 'Lainnya' },
+    { value: 'prefer_not_to_say', label: 'Lebih Baik Tidak Disebutkan' }
+  ]},
+  { key: 'address', label: 'Alamat', type: 'textarea' },
 ];
+
+const genderLabel = computed(() => {
+  if (!profile.value.gender) return 'Belum diisi';
+  const genderMap = {
+    'male': 'Laki-laki',
+    'female': 'Perempuan',
+    'other': 'Lainnya',
+    'prefer_not_to_say': 'Lebih Baik Tidak Disebutkan'
+  };
+  return genderMap[profile.value.gender] || profile.value.gender;
+});
+
+const formatDate = (dateString) => {
+  if (!dateString) return 'Belum diisi';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+};
 
 onMounted(async () => {
   try {
@@ -113,9 +219,17 @@ const addSelectedSkill = () => {
               class="border-b border-gray-200 pb-2 max-w-full overflow-hidden">
               <h3 class="text-sm font-semibold text-gray-600 mb-2">{{ field.label }}</h3>
               <p class="text-gray-800 break-words overflow-wrap break-word max-w-full overflow-hidden">
-                <span v-if="profileLoaded && (!profile[field.key] || profile[field.key].trim() === '')"
-                  class="text-gray-400 italic">empty</span>
-                <span v-else>{{ profile[field.key] }}</span>
+                <template v-if="field.key === 'date_of_birth'">
+                  <span>{{ formatDate(profile[field.key]) }}</span>
+                </template>
+                <template v-else-if="field.key === 'gender'">
+                  <span>{{ genderLabel }}</span>
+                </template>
+                <template v-else>
+                  <span v-if="profileLoaded && (!profile[field.key] || profile[field.key].trim() === '')"
+                    class="text-gray-400 italic">Belum diisi</span>
+                  <span v-else>{{ profile[field.key] }}</span>
+                </template>
               </p>
             </div>
             <!-- Summary -->
@@ -158,6 +272,14 @@ const addSelectedSkill = () => {
                 <template v-if="field.type === 'textarea'">
                   <textarea :id="field.key" v-model="form[field.key]" rows="3"
                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                </template>
+                <template v-else-if="field.type === 'select'">
+                  <select :id="field.key" v-model="form[field.key]"
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    <option v-for="opt in field.options" :key="opt.value" :value="opt.value">
+                      {{ opt.label }}
+                    </option>
+                  </select>
                 </template>
                 <template v-else>
                   <input :id="field.key" v-model="form[field.key]" :type="field.inputType || 'text'"
@@ -226,7 +348,7 @@ const addSelectedSkill = () => {
           @close="showPhotoPopup = false" @upload="triggerFileInput" @delete="deletePhoto" />
       </transition>
 
-      <input type="file" ref="fileInput" @change="handlePhotoChange" accept="image/jpeg,image/png,image/gif"
+      <input type="file" ref="fileInput" @change="onFileChange" accept="image/jpeg,image/png,image/webp,image/jpg"
         style="display: none" />
 
       <!-- Message Notification -->
