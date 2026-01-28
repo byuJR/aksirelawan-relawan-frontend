@@ -66,9 +66,10 @@ const onFileChange = async (e) => {
       throw new Error('User not authenticated');
     }
     
-    const userId = profile.id; // Use profile.id instead
+    // IMPORTANT: Use auth user id for RLS policy (not profile.id)
+    const authUserId = currentUser.id;
     const fileExt = file.name.split('.').pop();
-    const filePath = `${userId}/avatar.${fileExt}`;
+    const filePath = `${authUserId}/avatar.${fileExt}`;
 
     // Delete old avatar if exists
     if (profile.photo_url) {
