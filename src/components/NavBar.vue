@@ -1,8 +1,9 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { gsap } from 'gsap';
 import AuthModal from './AuthModal.vue';
 import AboutPopup from './AboutPopup.vue';
+import ProfileMenu from './ProfileMenu.vue';
 import { useRouter } from 'vue-router';
 import AksiRelawanIcon from '../assets/images/icons/AksiRelawan.png';
 import UserIcon from '../assets/images/icons/iconuser.png';
@@ -27,16 +28,44 @@ const {
 const router = useRouter();
 
 const user = ref(null);
+const profileMenuRef = ref(null);
+const avatarButtonRef = ref(null);
 
 // Get fresh user from Supabase on mount
 const getCurrentUser = async () => {
   const { data: { user: supabaseUser } } = await supabase.auth.getUser();
   if (supabaseUser) {
-    user.value = supabaseUser;
-    localStorage.setItem('user', JSON.stringify(supabaseUser));
+    // Fetch user profile data from users table
+    const { data: userData, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('auth_user_id', supabaseUser.id)
+      .single();
+    
+    if (userData && !error) {
+      user.value = {
+        ...supabaseUser,
+        ...userData
+      };
+      localStorage.setItem('user', JSON.stringify(user.value));
+    } else {
+      user.value = supabaseUser;
+      localStorage.setItem('user', JSON.stringify(supabaseUser));
+    }
   } else {
     user.value = null;
     localStorage.removeItem('user');
+  }
+};
+
+// Handle click outside to close profile popup
+const handleClickOutside = (event) => {
+  if (showProfilePopup.value && 
+      profileMenuRef.value && 
+      avatarButtonRef.value &&
+      !profileMenuRef.value.contains(event.target) &&
+      !avatarButtonRef.value.contains(event.target)) {
+    showProfilePopup.value = false;
   }
 };
 
@@ -71,6 +100,13 @@ function toggleProfilePopup() {
 
 const isLoggedIn = computed(() => !!user.value);
 
+const avatarUrl = computed(() => {
+  if (user.value?.photo_url && user.value.photo_url.trim()) {
+    return `${user.value.photo_url}?t=${Date.now()}`;
+  }
+  return UserIcon;
+});
+
 const isActive = (item) => {
   return router.currentRoute.value.path === item.path;
 };
@@ -93,6 +129,9 @@ onMounted(async () => {
   // Get fresh user from Supabase
   await getCurrentUser();
   
+  // Add click outside listener
+  document.addEventListener('click', handleClickOutside);
+  
   gsap.from('.nav-logo-content', {
     duration: 1,
     x: -50,
@@ -112,6 +151,10 @@ onMounted(async () => {
     stagger: 0.1,
     ease: 'power3.out'
   });
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside);
 });
 </script>
 
@@ -164,25 +207,21 @@ onMounted(async () => {
       </div>
 
       <div v-else class="relative ml-auto auth-button">
-        <div class="flex flex-nowrap items-center gap-2">
-          <img :src="user.profilePicture || UserIcon" class="w-10 h-10 rounded-full cursor-pointer"
-            @click="toggleProfilePopup" />
+        <div ref="avatarButtonRef" class="flex flex-nowrap items-center gap-2">
+          <img 
+            :src="avatarUrl" 
+            class="w-10 h-10 rounded-full cursor-pointer object-cover border-2 border-gray-200 hover:border-indigo-400 transition-colors"
+            @click="toggleProfilePopup" 
+          />
         </div>
 
-        <div v-if="showProfilePopup" class="absolute right-0 mt-2 bg-white shadow-lg w-48 p-2 rounded-md">
-          <div class="flex flex-col space-y-1">
-            <!-- <img :src="user.profilePicture || UserIcon" class="w-16 h-16 rounded-full cursor-pointer" /> -->
-            <p class="font-semibold">{{ user.name }}</p>
-            <p class="text-sm text-gray-600">{{ user.email }}</p>
-            <hr />
-            <a href="#" @click.prevent="handleNavItemClick({ path: '/profile' })"
-              class="hover:bg-gray-100 p-1 rounded">Profile</a>
-            <hr />
-            <button @click="handleLogout"
-              class="text-red-600 hover:text-red-800 w-full text-center hover:bg-red-100 rounded py-1">
-              Keluar
-            </button>
-          </div>
+        <div v-if="showProfilePopup" ref="profileMenuRef">
+          <ProfileMenu 
+            :user="user" 
+            :defaultIcon="UserIcon" 
+            @logout="handleLogout"
+            @close="showProfilePopup = false"
+          />
         </div>
       </div>
     </div>

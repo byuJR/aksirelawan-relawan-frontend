@@ -1,10 +1,10 @@
 <template>
-  <div class="absolute right-0 top-full w-64 bg-white rounded-lg shadow-xl py-2 z-50 border border-gray-100">
+  <div class="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-xl py-2 z-50 border border-gray-100">
     <!-- Header Profile -->
     <div class="flex flex-col items-center space-y-3 px-6 py-4 border-b border-gray-100">
       <div class="relative">
         <img 
-          :src="user?.photo_url || defaultIcon" 
+          :src="avatarUrl" 
           alt="Profile Photo" 
           class="w-20 h-20 rounded-full object-cover border-4 border-indigo-100 shadow-md" 
         />
@@ -20,6 +20,7 @@
     <div class="py-2">
       <router-link 
         to="/profile"
+        @click="emit('close')"
         class="flex items-center gap-3 px-6 py-3 hover:bg-indigo-50 transition-colors duration-200 group"
       >
         <svg class="w-5 h-5 text-gray-600 group-hover:text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -43,15 +44,21 @@
 
 
 <script setup>
-import { defineEmits, defineProps } from 'vue';
+import { computed, defineEmits, defineProps } from 'vue';
 
 
 const props = defineProps({ 
   user: Object, 
   defaultIcon: { type: String, default: '' } 
 });
-const emit = defineEmits(['logout']);
+const emit = defineEmits(['logout', 'close']);
 
+const avatarUrl = computed(() => {
+  if (props.user?.photo_url && props.user.photo_url.trim()) {
+    return `${props.user.photo_url}?t=${Date.now()}`;
+  }
+  return props.defaultIcon;
+});
 
 function onLogout() { 
   emit('logout'); 
