@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import BackgroundEffect from '../components/BackgroundEffect.vue'
 
 const teamMembers = [
   {
@@ -67,12 +68,7 @@ const teamMembers = [
 
 <template>
   <div class="min-h-screen bg-white relative overflow-hidden">
-    <!-- Floating Background Shapes - Simplified -->
-    <div class="absolute inset-0 overflow-hidden pointer-events-none">
-      <div class="floating-circle bg-indigo-900 opacity-10" style="width: 400px; height: 400px; top: -200px; left: -150px;"></div>
-      <div class="floating-circle bg-indigo-800 opacity-12" style="width: 300px; height: 300px; top: 10%; right: -100px;"></div>
-      <div class="floating-circle bg-indigo-900 opacity-10" style="width: 350px; height: 350px; bottom: -150px; left: 10%;"></div>
-    </div>
+    <BackgroundEffect />
 
     <div class="container mx-auto px-4 py-16 relative z-10">
       <!-- Header Section -->
@@ -164,23 +160,6 @@ const teamMembers = [
 </template>
 
 <style scoped>
-/* Floating circles animation - Simplified */
-.floating-circle {
-  position: absolute;
-  border-radius: 50%;
-  animation: float 25s ease-in-out infinite;
-  filter: blur(60px);
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0) translateX(0);
-  }
-  50% {
-    transform: translateY(-40px) translateX(30px);
-  }
-}
-
 /* Card animation */
 @keyframes fadeInUp {
   from {
