@@ -7,12 +7,10 @@ import PenIcon from "../icons/PenIcon.vue";
 import PhotoModal from "./PhotoModal.vue";
 import { uploadFile, getPublicUrl, deleteFile } from "../../services/storageService.js";
 import { supabase } from "../../config/supabase";
-import { useAuth } from "../../composables/useAuth.js";
 
 const fileInput = ref(null);
 const showPhotoPopup = ref(false);
 const uploadingAvatar = ref(false);
-const { user } = useAuth();
 
 const {
   profile,
@@ -61,7 +59,14 @@ const onFileChange = async (e) => {
 
   try {
     uploadingAvatar.value = true;
-    const userId = user.value.id;
+    
+    // Get current user from Supabase
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    
+    const userId = profile.id; // Use profile.id instead
     const fileExt = file.name.split('.').pop();
     const filePath = `${userId}/avatar.${fileExt}`;
 
@@ -88,11 +93,11 @@ const onFileChange = async (e) => {
     // Get public URL
     const newAvatarUrl = await getPublicUrl('user-avatars', filePath);
 
-    // Update user record in database
+    // Update user record in database (use profile.id)
     const { error: updateError } = await supabase
       .from('users')
       .update({ photo_url: newAvatarUrl })
-      .eq('id', userId);
+      .eq('id', profile.id);
 
     if (updateError) throw updateError;
 
