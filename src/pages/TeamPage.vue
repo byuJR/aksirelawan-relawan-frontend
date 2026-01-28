@@ -66,15 +66,12 @@ const teamMembers = [
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
-    <!-- Floating Background Shapes -->
+  <div class="min-h-screen bg-white relative overflow-hidden">
+    <!-- Floating Background Shapes - Simplified -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
-      <div class="floating-circle bg-indigo-300 opacity-20" style="width: 300px; height: 300px; top: -150px; left: -100px;"></div>
-      <div class="floating-circle bg-indigo-400 opacity-15" style="width: 200px; height: 200px; top: 20%; right: -50px; animation-delay: 2s;"></div>
-      <div class="floating-circle bg-indigo-500 opacity-20" style="width: 250px; height: 250px; top: 50%; left: -80px; animation-delay: 4s;"></div>
-      <div class="floating-circle bg-indigo-400 opacity-15" style="width: 180px; height: 180px; top: 70%; right: 10%; animation-delay: 1s;"></div>
-      <div class="floating-circle bg-indigo-600 opacity-15" style="width: 220px; height: 220px; bottom: -100px; left: 20%; animation-delay: 3s;"></div>
-      <div class="floating-circle bg-indigo-500 opacity-20" style="width: 150px; height: 150px; top: 40%; right: 5%; animation-delay: 5s;"></div>
+      <div class="floating-circle bg-indigo-900 opacity-10" style="width: 400px; height: 400px; top: -200px; left: -150px;"></div>
+      <div class="floating-circle bg-indigo-800 opacity-12" style="width: 300px; height: 300px; top: 10%; right: -100px;"></div>
+      <div class="floating-circle bg-indigo-900 opacity-10" style="width: 350px; height: 350px; bottom: -150px; left: 10%;"></div>
     </div>
 
     <div class="container mx-auto px-4 py-16 relative z-10">
@@ -167,26 +164,20 @@ const teamMembers = [
 </template>
 
 <style scoped>
-/* Floating circles animation */
+/* Floating circles animation - Simplified */
 .floating-circle {
   position: absolute;
   border-radius: 50%;
-  animation: float 20s ease-in-out infinite;
-  filter: blur(40px);
+  animation: float 25s ease-in-out infinite;
+  filter: blur(60px);
 }
 
 @keyframes float {
   0%, 100% {
-    transform: translateY(0) translateX(0) rotate(0deg);
-  }
-  25% {
-    transform: translateY(-30px) translateX(20px) rotate(90deg);
+    transform: translateY(0) translateX(0);
   }
   50% {
-    transform: translateY(-60px) translateX(-20px) rotate(180deg);
-  }
-  75% {
-    transform: translateY(-30px) translateX(-40px) rotate(270deg);
+    transform: translateY(-40px) translateX(30px);
   }
 }
 
