@@ -137,14 +137,16 @@ const onFileChange = async (e) => {
     console.log('Updating database for user id:', profile.id);
 
     // Update user record in database (use profile.id)
-    const { error: updateError } = await supabase
+    const { data: updateData, error: updateError } = await supabase
       .from('users')
       .update({ 
         photo_url: baseUrl, // Save without timestamp in DB
         updated_at: new Date().toISOString()
       })
-      .eq('id', profile.id);
+      .eq('id', profile.id)
+      .select();
 
+    console.log('Database update data:', updateData);
     console.log('Database update error:', updateError);
 
     if (updateError) throw updateError;
