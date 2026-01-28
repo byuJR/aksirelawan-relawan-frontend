@@ -67,10 +67,11 @@ const teamMembers = [
 </script>
 
 <template>
-  <div class="min-h-screen bg-white relative overflow-hidden">
-    <BackgroundEffect />
+  <div class="min-h-screen bg-white">
+    <div class="relative overflow-hidden">
+      <BackgroundEffect />
 
-    <div class="container mx-auto px-4 py-16 relative z-10">
+      <div class="container mx-auto px-4 py-16 relative z-10">
       <!-- Header Section -->
       <div class="text-center mb-16">
         <h1 class="text-5xl font-bold text-gray-900 mb-4">Tim Aksi Relawan</h1>
@@ -156,6 +157,7 @@ const teamMembers = [
         </a>
       </div>
     </div>
+    </div>
   </div>
 </template>
 
@@ -174,11 +176,5 @@ const teamMembers = [
 
 .container > div {
   animation: fadeInUp 0.6s ease-out;
-}
-
-/* Ensure footer is above background effect */
-:deep(footer) {
-  position: relative;
-  z-index: 20;
 }
 </style>
