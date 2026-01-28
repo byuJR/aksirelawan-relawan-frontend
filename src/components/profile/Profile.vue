@@ -37,7 +37,9 @@ const selectedSkillId = ref("");
 const triggerFileInput = () => fileInput.value.click();
 
 const onFileChange = async (e) => {
+  console.log('onFileChange called!', e);
   const file = e.target.files[0];
+  console.log('Selected file:', file);
   if (!file) return;
 
   // Validate file size (5MB)
