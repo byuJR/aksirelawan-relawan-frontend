@@ -114,12 +114,18 @@ export const ActivityService = {
     const items = data.map(activity => {
       let imageUrl = null;
       
-      // If thumbnail_url exists, get public URL from storage
+      // If thumbnail_url exists, check if it's already a full URL or just a path
       if (activity.thumbnail_url) {
-        const { data: urlData } = supabase.storage
-          .from('activity-images')
-          .getPublicUrl(activity.thumbnail_url);
-        imageUrl = urlData?.publicUrl;
+        // If it starts with http, it's already a full URL
+        if (activity.thumbnail_url.startsWith('http')) {
+          imageUrl = activity.thumbnail_url;
+        } else {
+          // It's a path, get public URL from storage
+          const { data: urlData } = supabase.storage
+            .from('activity-images')
+            .getPublicUrl(activity.thumbnail_url);
+          imageUrl = urlData?.publicUrl;
+        }
       }
 
       return {
@@ -151,12 +157,18 @@ export const ActivityService = {
 
     let imageUrl = null;
     
-    // If thumbnail_url exists, get public URL from storage
+    // If thumbnail_url exists, check if it's already a full URL or just a path
     if (data.thumbnail_url) {
-      const { data: urlData } = supabase.storage
-        .from('activity-images')
-        .getPublicUrl(data.thumbnail_url);
-      imageUrl = urlData?.publicUrl;
+      // If it starts with http, it's already a full URL
+      if (data.thumbnail_url.startsWith('http')) {
+        imageUrl = data.thumbnail_url;
+      } else {
+        // It's a path, get public URL from storage
+        const { data: urlData } = supabase.storage
+          .from('activity-images')
+          .getPublicUrl(data.thumbnail_url);
+        imageUrl = urlData?.publicUrl;
+      }
     }
 
     return {
