@@ -91,10 +91,68 @@ export const AuthService = {
   },
 };
 
-// Services lainnya - pakai api (Rust backend)
+// Activity Service - using Supabase direct access
 export const ActivityService = {
-  getAll: (params) => api.get("/activities/public", { params }), // Public endpoint untuk relawan
-  getById: (id) => api.get(`/activities/${id}`),
+  // Get all public activities
+  getAll: async (params) => {
+    const { data, error } = await supabase
+      .from('activities')
+      .select(`
+        *,
+        organizations (
+          id,
+          organization_name,
+          organization_type,
+          contact_person,
+          contact_email,
+          photo_url
+        )
+      `)
+      .neq('status', 'cancelled')
+      .order('start_date', { ascending: false });
+
+    if (error) throw error;
+
+    // Transform data to match expected format
+    const items = data.map(activity => ({
+      ...activity,
+      organization_name: activity.organizations?.organization_name || 'Organisasi',
+      image_url: activity.thumbnail_url || null
+    }));
+
+    return { data: { data: { items } } };
+  },
+
+  // Get single activity by ID
+  getById: async (id) => {
+    const { data, error } = await supabase
+      .from('activities')
+      .select(`
+        *,
+        organizations (
+          id,
+          organization_name,
+          organization_type,
+          contact_person,
+          contact_email,
+          photo_url
+        )
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+
+    return {
+      data: {
+        ...data,
+        organization_name: data.organizations?.organization_name || 'Organisasi',
+        image_url: data.thumbnail_url || null
+      }
+    };
+  },
+
+  // These endpoints require authentication and are for organization use
   create: (data) => api.post("/activities", data),
   update: (id, data) => api.put(`/activities/${id}`, data),
   delete: (id) => api.delete(`/activities/${id}`),
