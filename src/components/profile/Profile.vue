@@ -91,8 +91,12 @@ const onFileChange = async (e) => {
 
     if (uploadError) throw uploadError;
 
+    console.log('Upload success! Getting public URL...');
+
     // Get public URL
     const newAvatarUrl = await getPublicUrl('user-avatars', filePath);
+    console.log('Public URL:', newAvatarUrl);
+    console.log('Updating database for user id:', profile.id);
 
     // Update user record in database (use profile.id)
     const { error: updateError } = await supabase
@@ -100,7 +104,11 @@ const onFileChange = async (e) => {
       .update({ photo_url: newAvatarUrl })
       .eq('id', profile.id);
 
+    console.log('Database update error:', updateError);
+
     if (updateError) throw updateError;
+
+    console.log('Database updated successfully!');
 
     // Update local state
     profile.photo_url = newAvatarUrl;
